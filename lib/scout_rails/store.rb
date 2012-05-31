@@ -3,6 +3,7 @@
 class ScoutRails::Store
   attr_accessor :metric_hash
   attr_accessor :stack
+  attr_accessor :sample
   
   def initialize
     @metric_hash = Hash.new
@@ -49,7 +50,15 @@ class ScoutRails::Store
     if stack.empty?
       ScoutRails::Agent.instance.logger.debug "Transaction complete. Merging #{transaction_hash.size} metrics."
       merge_data(transaction_hash)
+      store_sample(transaction_hash,meta,stat)
       reset_transaction!
+    end
+  end
+  
+  # Stores the slowest transaction. This will be sent to the server.
+  def store_sample(transaction_hash,parent_meta,parent_stat)
+    if @sample.nil? or (@sample and parent_stat.total_call_time > @sample.total_call_time)
+      @sample = ScoutRails::TransactionSample.new(parent_meta.metric_name,parent_stat.total_call_time,transaction_hash)
     end
   end
   

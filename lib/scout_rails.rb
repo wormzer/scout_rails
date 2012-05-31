@@ -14,6 +14,7 @@ require File.expand_path('../scout_rails/metric_stats.rb', __FILE__)
 require File.expand_path('../scout_rails/stack_item.rb', __FILE__)
 require File.expand_path('../scout_rails/store.rb', __FILE__)
 require File.expand_path('../scout_rails/tracer.rb', __FILE__)
+require File.expand_path('../scout_rails/transaction_sample.rb', __FILE__)
 require File.expand_path('../scout_rails/instruments/process/process_cpu.rb', __FILE__)
 require File.expand_path('../scout_rails/instruments/process/process_memory.rb', __FILE__)
 
