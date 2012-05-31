@@ -1,5 +1,5 @@
 class ScoutRails::TransactionSample
-  attr_accessor :metric_name, :total_call_time, :metrics
+  attr_accessor :metric_name, :total_call_time, :metrics, :meta
   
   def initialize(metric_name,total_call_time,metrics)
     self.metric_name = metric_name
