@@ -7,7 +7,8 @@ class ScoutRails::MetricStats
   attr_accessor :total_exclusive_time
   attr_accessor :sum_of_squares
   
-  def initialize
+  def initialize(scoped = false)
+    @scoped = scoped
     self.call_count = 0
     self.total_call_time = 0.0
     self.total_exclusive_time = 0.0
@@ -17,12 +18,15 @@ class ScoutRails::MetricStats
   end
   
   def update!(call_time,exclusive_time)
-    self.min_call_time = call_time if self.call_count == 0 or call_time < min_call_time
-    self.max_call_time = call_time if self.call_count == 0 or call_time > max_call_time   
+    # If this metric is scoped inside another, use exclusive time for min/max and sum_of_squares. Non-scoped metrics
+    # (like controller actions) track the total call time.
+    t = (@scoped ? exclusive_time : call_time)
+    self.min_call_time = t if self.call_count == 0 or t < min_call_time
+    self.max_call_time = t if self.call_count == 0 or t > max_call_time   
     self.call_count +=1
     self.total_call_time += call_time
     self.total_exclusive_time += exclusive_time
-    self.sum_of_squares += (call_time * call_time)
+    self.sum_of_squares += (t * t)
     self
   end
   
@@ -31,7 +35,7 @@ class ScoutRails::MetricStats
     self.call_count += other.call_count
     self.total_call_time += other.total_call_time
     self.total_exclusive_time += other.total_exclusive_time
-    self.min_call_time = other.min_call_time if other.min_call_time < self.min_call_time
+    self.min_call_time = other.min_call_time if self.min_call_time.zero? or other.min_call_time < self.min_call_time
     self.max_call_time = other.max_call_time if other.max_call_time > self.max_call_time
     self.sum_of_squares += other.sum_of_squares
     self

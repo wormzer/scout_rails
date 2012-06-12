@@ -16,10 +16,8 @@ module ScoutRails::Instruments
     # specific controller actions.
     def perform_action_with_scout_instruments(*args, &block)
       scout_controller_action = "Controller/#{controller_path}/#{action_name}"
-      self.class.instrument(scout_controller_action) do
-        Thread::current[:scout_scope_name] = scout_controller_action
+      self.class.trace(scout_controller_action, :uri => request.request_uri) do
         perform_action_without_scout_instruments(*args, &block)
-        Thread::current[:scout_scope_name] = nil
       end
     end
   end
@@ -42,6 +40,6 @@ if defined?(ActionController) && defined?(ActionController::Base)
   ScoutRails::Agent.instance.logger.debug "Instrumenting ActionView::Template"
   ActionView::Template.class_eval do
     include ::ScoutRails::Tracer
-    instrument_method :render, 'View/#{path[%r{^(/.*/)?(.*)$},2]}/Rendering'
+    instrument_method :render, :metric_name => 'View/#{path[%r{^(/.*/)?(.*)$},2]}/Rendering', :scope => true
   end
 end

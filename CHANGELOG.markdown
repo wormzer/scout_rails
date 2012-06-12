@@ -1,3 +1,7 @@
+# 0.0.4.pre
+
+* Transaction Sampling
+
 # 0.0.3.pre
 
 * Removed dynamic ActiveRecord caller instrumentation

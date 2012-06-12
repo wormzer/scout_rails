@@ -216,14 +216,16 @@ module ScoutRails
             controller_count += stats.call_count
           end
         end        
-        logger.debug "#{config.settings['name']} Delivering metrics for #{controller_count} requests."
+        logger.debug "#{config.settings['name']} Delivering metrics for #{controller_count} requests."        
         response =  post( checkin_uri,
                            Marshal.dump(:metrics => metrics, :sample => store.sample),
                            "Content-Type"     => "application/json" )
         if response and response.is_a?(Net::HTTPSuccess)
           directives = Marshal.load(response.body)
           self.metric_lookup.merge!(directives[:metric_lookup])
-          store.sample = nil
+          store.transaction_sample_lock.synchronize do
+            store.sample = nil
+          end
           logger.debug "Metric Cache Size: #{metric_lookup.size}"
         end
       end

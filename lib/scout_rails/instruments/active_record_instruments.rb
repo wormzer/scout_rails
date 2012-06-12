@@ -15,7 +15,7 @@ module ScoutRails::Instruments
     
     def log_with_scout_instruments(*args, &block)
       sql, name = args
-      self.class.instrument(scout_ar_metric_name(sql,name)) do
+      self.class.instrument(scout_ar_metric_name(sql,name), :desc => scout_sanitize_sql(sql)) do
         log_without_scout_instruments(sql, name, &block)
       end
     end
@@ -35,11 +35,25 @@ module ScoutRails::Instruments
                         end
                       end
         metric = "ActiveRecord/#{model}/#{metric_name}" if metric_name
-        metric = "Database/SQL/other" if metric.nil?
+        metric = "ActiveRecord/SQL/other" if metric.nil?
       else
-        metric = "Database/SQL/Unknown"
+        metric = "ActiveRecord/SQL/Unknown"
       end
       metric
+    end
+    
+    # Removes actual values from SQL. Used to both obfuscate the SQL and group 
+    # similar queries in the UI.
+    def scout_sanitize_sql(sql)
+      return nil if sql.length > 1000 # safeguard - don't sanitize large SQL statements
+      sql = sql.dup
+      sql.gsub!(/\\"/, '') # removing escaping double quotes
+      sql.gsub!(/\\'/, '') # removing escaping single quotes
+      sql.gsub!(/'(?:[^']|'')*'/, '?') # removing strings (single quote)
+      sql.gsub!(/"(?:[^"]|"")*"/, '?') # removing strings (double quote)
+      sql.gsub!(/\b\d+\b/, '?') # removing integers
+      sql.gsub!(/\?(,\?)+/,'?') # replace multiple ? w/a single ?
+      sql
     end
     
   end # module ActiveRecordInstruments

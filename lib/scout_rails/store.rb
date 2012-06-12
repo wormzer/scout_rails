@@ -2,25 +2,26 @@
 # of instrumented methods that are being called. It's accessed via +ScoutRails::Agent.instance.store+. 
 class ScoutRails::Store
   attr_accessor :metric_hash
+  attr_accessor :transaction_hash
   attr_accessor :stack
   attr_accessor :sample
+  attr_reader :transaction_sample_lock
   
   def initialize
     @metric_hash = Hash.new
+    # Stores aggregate metrics for the current transaction. When the transaction is finished, metrics
+    # are merged with the +metric_hash+.
+    @transaction_hash = Hash.new
     @stack = Array.new
-  end
-  
-  # Stores aggregate metrics for the current transaction. When the transaction is finished, metrics
-  # are merged with the +metric_hash+.
-  def transaction_hash
-    Thread::current[:scout_transaction_hash] || Hash.new
+    # ensure background thread doesn't manipulate transaction sample while the store is.
+    @transaction_sample_lock = Mutex.new
   end
   
   # Called when the last stack item completes for the current transaction to clear
   # for the next run.
   def reset_transaction!
     Thread::current[:scout_scope_name] = nil
-    Thread::current[:scout_transaction_hash] = Hash.new
+    @transaction_hash = Hash.new
   end
   
   # Called at the start of Tracer#instrument:
@@ -34,31 +35,62 @@ class ScoutRails::Store
     item
   end
   
-  def stop_recording(sanity_check_item)
+  def stop_recording(sanity_check_item, options={})
     item = stack.pop
+    stack_empty = stack.empty?
     raise "items not equal: #{item.inspect} / #{sanity_check_item.inspect}" if item != sanity_check_item
     duration = Time.now - item.start_time
     if last=stack.last
       last.children_time += duration
     end
-    meta = ScoutRails::MetricMeta.new(item.metric_name)
-    stat = transaction_hash[meta] || ScoutRails::MetricStats.new
+    meta = ScoutRails::MetricMeta.new(item.metric_name, :desc => options[:desc])
+    meta.scope = nil if stack_empty
+    
+    # add backtrace for slow calls ... how is exclusive time handled?
+    if duration > 0.5 and !stack_empty
+      meta.extra = {:backtrace => caller.find_all { |c| c =~ /\/app\//}}
+    end
+    stat = transaction_hash[meta] || ScoutRails::MetricStats.new(!stack_empty)
     
     stat.update!(duration,duration-item.children_time)
     transaction_hash[meta] = stat   
     
-    if stack.empty?
-      ScoutRails::Agent.instance.logger.debug "Transaction complete. Merging #{transaction_hash.size} metrics."
-      merge_data(transaction_hash)
-      store_sample(transaction_hash,meta,stat)
-      reset_transaction!
+    if stack_empty
+      aggs=aggregate_calls(transaction_hash.dup,meta)
+      store_sample(options[:uri],transaction_hash.dup.merge(aggs),meta,stat)  
+      # ugly attempt to see if deep dup is the issue  
+      duplicate = aggs.dup
+      duplicate.each_pair do |k,v|
+        duplicate[k.dup] = v.dup
+      end  
+      merge_data(duplicate.merge({meta.dup => stat.dup})) # aggregrates + controller 
     end
   end
   
+  # Takes a metric_hash of calls and generates aggregates for ActiveRecord and View calls.
+  def aggregate_calls(metrics,parent_meta)
+    categories = %w(ActiveRecord View)
+    aggregates = {}
+    categories.each do |cat|
+      agg_meta=ScoutRails::MetricMeta.new("#{cat}/all")
+      agg_meta.scope = parent_meta.metric_name
+      agg_stats = ScoutRails::MetricStats.new
+      metrics.each do |meta,stats|
+        if meta.metric_name =~ /\A#{cat}\//
+          agg_stats.combine!(stats) 
+        end
+      end # metrics.each
+      aggregates[agg_meta] = agg_stats unless agg_stats.call_count.zero?
+    end # categories.each    
+    aggregates
+  end
+  
   # Stores the slowest transaction. This will be sent to the server.
-  def store_sample(transaction_hash,parent_meta,parent_stat)
-    if @sample.nil? or (@sample and parent_stat.total_call_time > @sample.total_call_time)
-      @sample = ScoutRails::TransactionSample.new(parent_meta.metric_name,parent_stat.total_call_time,transaction_hash)
+  def store_sample(uri,transaction_hash,parent_meta,parent_stat,options = {})    
+    @transaction_sample_lock.synchronize do
+      if parent_stat.total_call_time > 1 and (@sample.nil? or (@sample and parent_stat.total_call_time > @sample.total_call_time))
+        @sample = ScoutRails::TransactionSample.new(uri,parent_meta.metric_name,parent_stat.total_call_time,transaction_hash.dup)
+      end
     end
   end
   

@@ -15,8 +15,7 @@ module ScoutRails::Instruments
       name = 'root' if name.empty?
       name = @request.request_method + ' ' + name if @request && @request.respond_to?(:request_method)      
       scout_controller_action = "Controller/Sinatra/#{name}"
-      self.class.instrument(scout_controller_action) do
-        Thread::current[:scout_scope_name] = scout_controller_action  
+      self.class.trace(scout_controller_action, :uri => @request.path_info) do
         route_eval_without_scout_instruments(&blockarg)    
       end
     end # route_eval_with_scout_instrumentss

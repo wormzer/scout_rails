@@ -17,19 +17,33 @@ module ScoutRails::Tracer
       ScoutRails::Agent.instance.store
     end
     
-    def instrument(metric_name, &block)
+    # Use to trace a method call, possibly reporting slow transaction traces to Scout. 
+    def trace(metric_name, options = {}, &block)
+      ScoutRails::Agent.instance.store.reset_transaction!      
+      instrument(metric_name, options) do
+        Thread::current[:scout_scope_name] = metric_name
+        yield
+        Thread::current[:scout_scope_name] = nil
+      end
+    end
+    
+    def instrument(metric_name, options={}, &block)
+      if options.delete(:scope)
+        Thread::current[:scout_sub_scope] = metric_name 
+      end
       stack_item = store.record(metric_name)
       begin
         yield
       ensure
-        store.stop_recording(stack_item)
+        Thread::current[:scout_sub_scope] = nil if Thread::current[:scout_sub_scope] == metric_name
+        store.stop_recording(stack_item,options)
       end
     end
     
-    def instrument_method(method,metric_name = nil)
-      metric_name = metric_name || default_metric_name(method)
+    def instrument_method(method,options = {})
+      metric_name = options[:metric_name] || default_metric_name(method)
       return if !instrumentable?(method) or instrumented?(method,metric_name)
-      class_eval instrumented_method_string(method, metric_name), __FILE__, __LINE__
+      class_eval instrumented_method_string(method, {:metric_name => metric_name, :scope => options[:scope]}), __FILE__, __LINE__
       
       alias_method _uninstrumented_method_name(method, metric_name), method
       alias_method method, _instrumented_method_name(method, metric_name)
@@ -37,11 +51,11 @@ module ScoutRails::Tracer
     
     private
     
-    def instrumented_method_string(method, metric_name)
+    def instrumented_method_string(method, options)
       klass = (self === Module) ? "self" : "self.class"
-      "def #{_instrumented_method_name(method, metric_name)}(*args, &block)
-        result = #{klass}.instrument(\"#{metric_name}\") do
-          #{_uninstrumented_method_name(method, metric_name)}(*args, &block)
+      "def #{_instrumented_method_name(method, options[:metric_name])}(*args, &block)
+        result = #{klass}.instrument(\"#{options[:metric_name]}\",{:scope => #{options[:scope] || false}}) do
+          #{_uninstrumented_method_name(method, options[:metric_name])}(*args, &block)
         end
         result
       end"
