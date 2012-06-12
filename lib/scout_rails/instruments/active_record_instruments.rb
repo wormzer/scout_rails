@@ -69,6 +69,8 @@ def add_instruments
        include ::ScoutRails::Tracer
     end
   end
+rescue
+  ScoutRails::Agent.instance.logger.warn "ActiveRecord instrumentation exception: #{$!.message}"
 end
 
 if defined?(::Rails) && ::Rails::VERSION::MAJOR.to_i == 3
