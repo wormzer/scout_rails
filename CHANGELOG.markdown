@@ -1,4 +1,4 @@
-# 0.0.4.pre
+# 0.0.4
 
 * Transaction Sampling
 
