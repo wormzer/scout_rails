@@ -68,6 +68,8 @@ class ScoutRails::Store
     transaction_hash[meta] = stat   
     
     if stack_empty
+      ScoutRails::Agent.instance.logger.debug "Stop Recording: #{meta.metric_name}"
+      
       aggs=aggregate_calls(transaction_hash.dup,meta)
       store_sample(options[:uri],transaction_hash.dup.merge(aggs),meta,stat)  
       # deep duplicate  

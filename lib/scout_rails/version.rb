@@ -1,3 +1,3 @@
 module ScoutRails
-  VERSION = "0.0.5.debug.pre"
+  VERSION = "0.0.5.debug1.pre"
 end

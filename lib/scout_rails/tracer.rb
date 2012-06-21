@@ -21,6 +21,7 @@ module ScoutRails::Tracer
     def trace(metric_name, options = {}, &block)
       ScoutRails::Agent.instance.store.reset_transaction!      
       instrument(metric_name, options) do
+        ScoutRails::Agent.instance.logger.debug "Instrumenting #{metric_name}"
         Thread::current[:scout_scope_name] = metric_name
         yield
         Thread::current[:scout_scope_name] = nil
