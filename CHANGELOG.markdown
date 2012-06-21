@@ -1,5 +1,6 @@
 # 0.0.5.pre
 
+* Support for custom categories
 * Not raising an exception w/an unbalanced stack
 
 # 0.0.4
