@@ -4,7 +4,7 @@ module ScoutRails::Instruments
     # Instruments the action and tracks errors.
     def process_action(*args)
       scout_controller_action = "Controller/#{controller_path}/#{action_name}"
-      #ScoutRails::Agent.instance.logger.debug "Processing #{scout_controller_action}"
+      ScoutRails::Agent.instance.logger.debug "Processing #{scout_controller_action}"
       self.class.trace(scout_controller_action, :uri => request.fullpath) do
         begin
           super
