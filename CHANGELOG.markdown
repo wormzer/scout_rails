@@ -1,3 +1,7 @@
+# 0.0.5.pre
+
+* Not raising an exception w/an unbalanced stack
+
 # 0.0.4
 
 * Transaction Sampling

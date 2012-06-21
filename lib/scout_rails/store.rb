@@ -20,8 +20,10 @@ class ScoutRails::Store
   # Called when the last stack item completes for the current transaction to clear
   # for the next run.
   def reset_transaction!
+    Thread::current[:scout_stack_unbalanced] = nil
     Thread::current[:scout_scope_name] = nil
     @transaction_hash = Hash.new
+    @stack = Array.new
   end
   
   # Called at the start of Tracer#instrument:
@@ -38,7 +40,17 @@ class ScoutRails::Store
   def stop_recording(sanity_check_item, options={})
     item = stack.pop
     stack_empty = stack.empty?
-    raise "items not equal: #{item.inspect} / #{sanity_check_item.inspect}" if item != sanity_check_item
+    # unbalanced stack - if it's unbalanced, the item is popped but nothing happens. 
+    if Thread::current[:scout_stack_unbalanced]
+      return
+    end
+    # unbalanced stack check - unreproducable cases have seen this occur. when it does, sets a Thread variable 
+    # so we ignore further recordings. +Store#reset_transaction!+ resets this. 
+    if item != sanity_check_item
+      ScoutRails::Agent.instance.logger.warn "Scope [#{Thread::current[:scout_scope_name]}] Popped off stack: #{item.inspect} Expected: #{sanity_check_item.inspect}. Aborting."
+      Thread::current[:scout_stack_unbalanced] = true
+      return
+    end
     duration = Time.now - item.start_time
     if last=stack.last
       last.children_time += duration
@@ -58,7 +70,7 @@ class ScoutRails::Store
     if stack_empty
       aggs=aggregate_calls(transaction_hash.dup,meta)
       store_sample(options[:uri],transaction_hash.dup.merge(aggs),meta,stat)  
-      # ugly attempt to see if deep dup is the issue  
+      # deep duplicate  
       duplicate = aggs.dup
       duplicate.each_pair do |k,v|
         duplicate[k.dup] = v.dup
@@ -67,9 +79,21 @@ class ScoutRails::Store
     end
   end
   
+  # Returns the top-level category names used in the +metrics+ hash.
+  def categories(metrics)
+    cats = Set.new
+    metrics.keys.each do |meta|
+      next if meta.scope.nil? # ignore controller
+      if match=meta.metric_name.match(/\A([\w|\d]+)\//)
+        cats << match[1]
+      end
+    end # metrics.each
+    cats
+  end
+  
   # Takes a metric_hash of calls and generates aggregates for ActiveRecord and View calls.
   def aggregate_calls(metrics,parent_meta)
-    categories = %w(ActiveRecord View)
+    categories = categories(metrics)
     aggregates = {}
     categories.each do |cat|
       agg_meta=ScoutRails::MetricMeta.new("#{cat}/all")

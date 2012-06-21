@@ -27,6 +27,9 @@ module ScoutRails::Tracer
       end
     end
     
+    # Options:
+    # - :scope => If specified, sets the sub-scope for the metric. We allow additional scope level. This is used
+    # when rendering the transaction tree in the UI. 
     def instrument(metric_name, options={}, &block)
       if options.delete(:scope)
         Thread::current[:scout_sub_scope] = metric_name 
@@ -41,6 +44,7 @@ module ScoutRails::Tracer
     end
     
     def instrument_method(method,options = {})
+      ScoutRails::Agent.instance.logger.info "Instrumenting #{method}"
       metric_name = options[:metric_name] || default_metric_name(method)
       return if !instrumentable?(method) or instrumented?(method,metric_name)
       class_eval instrumented_method_string(method, {:metric_name => metric_name, :scope => options[:scope]}), __FILE__, __LINE__
