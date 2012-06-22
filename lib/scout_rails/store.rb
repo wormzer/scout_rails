@@ -67,7 +67,10 @@ class ScoutRails::Store
     stat.update!(duration,duration-item.children_time)
     transaction_hash[meta] = stat   
     
-    if stack_empty
+    # If this is a controller action, merge data into the metrics hash and store transaction data.
+    # It's possible that a metric could be instrumented before a controller action is - for now, we're
+    # ignoring those.
+    if stack_empty and meta.metric_name.match(/\AController\//)
       ScoutRails::Agent.instance.logger.debug "Stop Recording: #{meta.metric_name}"
       
       aggs=aggregate_calls(transaction_hash.dup,meta)
@@ -78,6 +81,8 @@ class ScoutRails::Store
         duplicate[k.dup] = v.dup
       end  
       merge_data(duplicate.merge({meta.dup => stat.dup})) # aggregrates + controller 
+      
+      ScoutRails::Agent.instance.logger.debug "Controller Metrics: #{metric_hash.keys.find_all { |meta| meta.metric_name.match(/\AController\//)}.size }"
     end
   end
   
