@@ -67,7 +67,8 @@ class ScoutRails::Store
     stat.update!(duration,duration-item.children_time)
     transaction_hash[meta] = stat   
     
-    if stack_empty
+    # Uses controllers as the entry point for a transaction. Otherwise, stats are ignored.
+    if stack_empty and meta.metric_name.match(/\AController\//)
       aggs=aggregate_calls(transaction_hash.dup,meta)
       store_sample(options[:uri],transaction_hash.dup.merge(aggs),meta,stat)  
       # deep duplicate  

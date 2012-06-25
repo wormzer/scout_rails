@@ -1,7 +1,8 @@
-# 0.0.5.pre
+# 0.0.5
 
 * Support for custom categories
 * Not raising an exception w/an unbalanced stack
+* Only allows controllers as the entry point for a transaction
 
 # 0.0.4
 
