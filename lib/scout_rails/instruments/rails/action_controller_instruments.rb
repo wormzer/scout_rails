@@ -30,6 +30,7 @@ if defined?(ActionController) && defined?(ActionController::Base)
 
     def rescue_action_with_scout(exception)
       ScoutRails::Agent.instance.store.track!("Errors/Request",1, :scope => nil)
+      ScoutRails::Agent.instance.store.ignore_transaction!
       rescue_action_without_scout exception
     end
 

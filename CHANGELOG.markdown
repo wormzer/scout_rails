@@ -1,3 +1,8 @@
+# 0.0.6.pre
+
+* Rails 2 - Not collecting traces when an exception occurs
+* Increased Transaction Sample Storage to 2 seconds from 1 second to decrease noise in UI
+
 # 0.0.5
 
 * Support for custom categories

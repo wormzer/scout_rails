@@ -20,10 +20,14 @@ class ScoutRails::Store
   # Called when the last stack item completes for the current transaction to clear
   # for the next run.
   def reset_transaction!
-    Thread::current[:scout_stack_unbalanced] = nil
+    Thread::current[:ignore_transaction] = nil
     Thread::current[:scout_scope_name] = nil
     @transaction_hash = Hash.new
     @stack = Array.new
+  end
+  
+  def ignore_transaction!
+    Thread::current[:ignore_transaction] = true
   end
   
   # Called at the start of Tracer#instrument:
@@ -40,15 +44,15 @@ class ScoutRails::Store
   def stop_recording(sanity_check_item, options={})
     item = stack.pop
     stack_empty = stack.empty?
-    # unbalanced stack - if it's unbalanced, the item is popped but nothing happens. 
-    if Thread::current[:scout_stack_unbalanced]
+    # if ignoring the transaction, the item is popped but nothing happens. 
+    if Thread::current[:ignore_transaction]
       return
     end
     # unbalanced stack check - unreproducable cases have seen this occur. when it does, sets a Thread variable 
     # so we ignore further recordings. +Store#reset_transaction!+ resets this. 
     if item != sanity_check_item
       ScoutRails::Agent.instance.logger.warn "Scope [#{Thread::current[:scout_scope_name]}] Popped off stack: #{item.inspect} Expected: #{sanity_check_item.inspect}. Aborting."
-      Thread::current[:scout_stack_unbalanced] = true
+      ignore_transaction!
       return
     end
     duration = Time.now - item.start_time
@@ -113,7 +117,7 @@ class ScoutRails::Store
   # Stores the slowest transaction. This will be sent to the server.
   def store_sample(uri,transaction_hash,parent_meta,parent_stat,options = {})    
     @transaction_sample_lock.synchronize do
-      if parent_stat.total_call_time > 1 and (@sample.nil? or (@sample and parent_stat.total_call_time > @sample.total_call_time))
+      if parent_stat.total_call_time >= 2 and (@sample.nil? or (@sample and parent_stat.total_call_time > @sample.total_call_time))
         @sample = ScoutRails::TransactionSample.new(uri,parent_meta.metric_name,parent_stat.total_call_time,transaction_hash.dup)
       end
     end
