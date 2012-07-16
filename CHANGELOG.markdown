@@ -1,3 +1,7 @@
+# 1.0.0
+
+Release!
+
 # 0.0.6.pre
 
 * Rails 2 - Not collecting traces when an exception occurs
