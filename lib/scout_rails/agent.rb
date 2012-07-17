@@ -50,6 +50,7 @@ module ScoutRails
     def start(options = {})
       @options.merge!(options)
       init_logger
+      logger.info "Attempting to start Scout Agent [#{ScoutRails::VERSION}] on [#{Socket.gethostname}]"
       if !config.settings['monitor'] and !@options[:force]
         logger.warn "Monitoring isn't enabled for the [#{environment.env}] environment."
         return false
@@ -66,11 +67,12 @@ module ScoutRails
       if !start_worker_thread?
         logger.debug "Not starting worker thread"
         install_passenger_worker_process_event if environment.passenger?
+        install_unicorn_worker_loop if environment.unicorn?
         return
       end
       start_worker_thread
       handle_exit
-      log_version_pid
+      logger.info "Scout Agent [#{ScoutRails::VERSION}] Initialized"
     end
     
     # Placeholder: store metrics locally on exit so those in memory aren't lost. Need to decide
@@ -116,8 +118,15 @@ module ScoutRails
       end
     end
     
-    def log_version_pid
-      logger.info "Scout Agent [#{ScoutRails::VERSION}] Initialized"
+    def install_unicorn_worker_loop
+      logger.debug "Installing Unicorn worker loop."
+      Unicorn::HttpServer.class_eval do
+        old = instance_method(:worker_loop)
+        define_method(:worker_loop) do |worker|
+          ScoutRails::Agent.instance.start_worker_thread
+          old.bind(self).call(worker)
+        end
+      end
     end
     
     def log_path
@@ -131,7 +140,7 @@ module ScoutRails
     
     # Creates the worker thread. The worker thread is a loop that runs continuously. It sleeps for +Agent#period+ and when it wakes,
     # processes data, either saving it to disk or reporting to Scout.
-    def start_worker_thread(connection_options = {})
+    def start_worker_thread
       logger.debug "Creating worker thread."
       @worker_thread = Thread.new do
         begin

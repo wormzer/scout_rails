@@ -1,3 +1,7 @@
+# 1.0.1.pre
+
+* Unicorn support (requires "preload_app true" in unicorn config file)
+
 # 1.0.0
 
 Release!

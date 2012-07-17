@@ -39,6 +39,7 @@ module ScoutRails
       @app_server ||= if thin? then :thin
                     elsif passenger? then :passenger
                     elsif webrick? then :webrick
+                    elsif unicorn? then :unicorn
                     else nil
                     end
     end
@@ -60,10 +61,17 @@ module ScoutRails
       defined?(::WEBrick) && defined?(::WEBrick::VERSION)
     end
     
+    def unicorn?
+      if defined?(::Unicorn) && defined?(::Unicorn::HttpServer)
+        # ensure Unicorn is actually initialized. 
+        ObjectSpace.each_object(::Unicorn::HttpServer) { |x| return true }
+      end
+    end
+    
     # If forking, don't start worker thread in the master process. Since it's started as a Thread, it won't survive
     # the fork. 
     def forking?
-      passenger?
+      passenger? or unicorn?
     end
     
     ### ruby checks
