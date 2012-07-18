@@ -1,6 +1,7 @@
 # 1.0.1.pre
 
 * Unicorn support (requires "preload_app true" in unicorn config file)
+* Fix for Thin detection - ensure it's actually running
 
 # 1.0.0
 

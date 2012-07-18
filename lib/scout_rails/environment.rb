@@ -47,7 +47,19 @@ module ScoutRails
     ### app server related-checks
     
     def thin?
-      defined?(::Thin) && defined?(::Thin::Server)
+      if defined?(::Thin) && defined?(::Thin::Server)
+        # Ensure Thin is actually initialized. It could just be required and not running.
+        ObjectSpace.each_object(Thin::Server) { |x| return true }
+        false
+      end
+    end
+    
+    def unicorn?
+      if defined?(::Unicorn) && defined?(::Unicorn::HttpServer)
+        # Ensure Unicorn is actually initialized. It could just be required and not running.
+        ObjectSpace.each_object(::Unicorn::HttpServer) { |x| return true }
+        false
+      end
     end
     
     # Called via +#forking?+ since Passenger forks. Adds an event listener to start the worker thread

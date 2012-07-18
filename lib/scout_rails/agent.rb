@@ -66,8 +66,8 @@ module ScoutRails
       start_instruments
       if !start_worker_thread?
         logger.debug "Not starting worker thread"
-        install_passenger_worker_process_event if environment.passenger?
-        install_unicorn_worker_loop if environment.unicorn?
+        install_passenger_worker_process_event if environment.app_server == :passenger
+        install_unicorn_worker_loop if environment.app_server == :unicorn
         return
       end
       start_worker_thread
@@ -108,7 +108,7 @@ module ScoutRails
     # * A supported application server is detected, but it forks (Passenger). In this case, 
     #   the agent is started in the forked process.
     def start_worker_thread?
-      !environment.forking? or environment.thin?
+      !environment.forking? or environment.app_server == :thin
     end
     
     def install_passenger_worker_process_event
