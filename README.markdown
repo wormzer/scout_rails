@@ -10,7 +10,17 @@ Install the gem:
 
     gem install scout_rails
     
-Signup for a [Scout](https://scoutapp.com) account and copy the config file to RAILS_ROOT/config/scout_rails.yml.
+Signup for a [Scout](https://scoutapp.com) account and copy the config file to `RAILS_ROOT/config/scout_rails.yml`.
+
+Your config file should look like:
+
+    common: &defaults
+      name: YOUR_APPLICATION_NAME
+      key: YOUR_APPLICATION_KEY
+      monitor: true
+
+    production:
+      <<: *defaults
       
 ## Supported Frameworks
 
@@ -27,6 +37,7 @@ Signup for a [Scout](https://scoutapp.com) account and copy the config file to R
 * Phusion Passenger
 * Thin
 * WEBrick
+* Unicorn (make sure to add `preload_app true` to `config/unicorn.rb`)
 
 ## Help
 
