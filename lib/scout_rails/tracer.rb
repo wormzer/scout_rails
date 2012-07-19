@@ -12,10 +12,6 @@ module ScoutRails::Tracer
   end
   
   module ClassMethods
-    # An easier reference to the agent's associated store. 
-    def store
-      ScoutRails::Agent.instance.store
-    end
     
     # Use to trace a method call, possibly reporting slow transaction traces to Scout. 
     def trace(metric_name, options = {}, &block)
@@ -34,12 +30,12 @@ module ScoutRails::Tracer
       if options.delete(:scope)
         Thread::current[:scout_sub_scope] = metric_name 
       end
-      stack_item = store.record(metric_name)
+      stack_item = ScoutRails::Agent.instance.store.record(metric_name)
       begin
         yield
       ensure
         Thread::current[:scout_sub_scope] = nil if Thread::current[:scout_sub_scope] == metric_name
-        store.stop_recording(stack_item,options)
+        ScoutRails::Agent.instance.store.stop_recording(stack_item,options)
       end
     end
     
