@@ -30,7 +30,7 @@ module ScoutRails::Tracer
       # don't instrument if (1) NOT inside a transaction and (2) NOT a Controller metric.
       if !Thread::current[:scout_scope_name] and metric_name !~ /\AController\//
         ScoutRails::Agent.instance.logger.debug "Not instrumenting [#{metric_name}] - no scope."
-        yield
+        return yield
       end
       if options.delete(:scope)
         Thread::current[:scout_sub_scope] = metric_name 
