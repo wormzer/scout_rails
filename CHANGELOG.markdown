@@ -1,3 +1,7 @@
+# 1.0.2.pre
+
+* Net::HTTP instrumentation
+
 # 1.0.1
 
 * Unicorn support (requires "preload_app true" in unicorn config file)
@@ -6,7 +10,7 @@
 
 # 1.0.0
 
-Release!
+* Release!
 
 # 0.0.6.pre
 
@@ -32,8 +36,8 @@ Release!
 
 # 0.0.2
 
-Doesn't prevent app from loading if no configuration exists for the current environment.
+* Doesn't prevent app from loading if no configuration exists for the current environment.
 
 # 0.0.1
 
-Boom! Initial Release.
+* Boom! Initial Release.

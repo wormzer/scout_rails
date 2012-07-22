@@ -27,6 +27,11 @@ module ScoutRails::Tracer
     # - :scope => If specified, sets the sub-scope for the metric. We allow additional scope level. This is used
     # when rendering the transaction tree in the UI. 
     def instrument(metric_name, options={}, &block)
+      # don't instrument if (1) NOT inside a transaction and (2) NOT a Controller metric.
+      if !Thread::current[:scout_scope_name] and metric_name !~ /\AController\//
+        ScoutRails::Agent.instance.logger.debug "Not instrumenting [#{metric_name}] - no scope."
+        yield
+      end
       if options.delete(:scope)
         Thread::current[:scout_sub_scope] = metric_name 
       end
