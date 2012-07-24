@@ -1,6 +1,7 @@
 # 1.0.2.pre
 
 * Net::HTTP instrumentation
+* ActionController::Metal instrumentation
 
 # 1.0.1
 

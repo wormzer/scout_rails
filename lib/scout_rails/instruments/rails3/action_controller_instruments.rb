@@ -27,6 +27,14 @@ if defined?(ActionController) && defined?(ActionController::Base)
   end
 end
 
+if defined?(ActionController) && defined?(ActionController::Metal)
+  ScoutRails::Agent.instance.logger.debug "Instrumenting ActionController::Metal"
+  ActionController::Metal.class_eval do
+    include ScoutRails::Tracer
+    include ::ScoutRails::Instruments::ActionControllerInstruments
+  end
+end
+
 if defined?(ActionView) && defined?(ActionView::PartialRenderer)
   ScoutRails::Agent.instance.logger.debug "Instrumenting ActionView::PartialRenderer"
   ActionView::PartialRenderer.class_eval do
