@@ -1,3 +1,3 @@
 module ScoutRails
-  VERSION = "1.0.2.pre1"
+  VERSION = "1.0.2.pre2"
 end

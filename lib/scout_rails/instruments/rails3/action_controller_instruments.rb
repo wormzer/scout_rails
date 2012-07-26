@@ -19,14 +19,8 @@ module ScoutRails::Instruments
   end
 end
 
-if defined?(ActionController) && defined?(ActionController::Base)
-  ScoutRails::Agent.instance.logger.debug "Instrumenting ActionController::Base"
-  ActionController::Base.class_eval do
-    include ScoutRails::Tracer
-    include ::ScoutRails::Instruments::ActionControllerInstruments
-  end
-end
-
+# ActionController::Base is a subclass of ActionController::Metal, so this instruments both
+# standard Rails requests + Metal.
 if defined?(ActionController) && defined?(ActionController::Metal)
   ScoutRails::Agent.instance.logger.debug "Instrumenting ActionController::Metal"
   ActionController::Metal.class_eval do
