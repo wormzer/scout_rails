@@ -2,6 +2,7 @@
 
 * Net::HTTP instrumentation
 * ActionController::Metal instrumentation
+* Determining number of processors
 
 # 1.0.1
 

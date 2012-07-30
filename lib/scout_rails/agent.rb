@@ -37,7 +37,7 @@ module ScoutRails
       @layaway = ScoutRails::Layaway.new
       @config = ScoutRails::Config.new(options[:config_path])
       @metric_lookup = Hash.new
-      @process_cpu=ScoutRails::Instruments::Process::ProcessCpu.new(1) # TODO: the argument is the number of processors
+      @process_cpu=ScoutRails::Instruments::Process::ProcessCpu.new(environment.processors)
       @process_memory=ScoutRails::Instruments::Process::ProcessMemory.new
     end
     
@@ -191,7 +191,7 @@ module ScoutRails
     def run_samplers
       begin
         cpu_util=@process_cpu.run # returns a hash
-        logger.debug "Process CPU: #{cpu_util.inspect}"
+        logger.debug "Process CPU: #{cpu_util.inspect} [#{environment.processors} CPU(s)]"
         store.track!("CPU/Utilization",cpu_util) if cpu_util
       rescue => e
         logger.info "Error reading ProcessCpu"

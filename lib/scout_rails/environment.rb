@@ -23,6 +23,19 @@ module ScoutRails
                       end
     end
     
+    def processors
+      return @processors if @processors
+      unless @processors
+        if `cat /proc/cpuinfo | grep 'model name' | wc -l` =~ /(\d+)/
+          @processors = $1.to_i
+        end
+        if @processors < 1
+          @processors = 1
+        end 
+      end
+      @processors
+    end
+    
     def root
       if framework == :rails
         RAILS_ROOT.to_s
