@@ -1,8 +1,8 @@
-# 1.0.2.pre
+# 1.0.2
 
 * Net::HTTP instrumentation
 * ActionController::Metal instrumentation
-* Determining number of processors
+* Determining number of processors for CPU % calculation
 
 # 1.0.1
 
