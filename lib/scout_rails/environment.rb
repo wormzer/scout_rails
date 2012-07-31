@@ -26,7 +26,10 @@ module ScoutRails
     def processors
       return @processors if @processors
       unless @processors
-        if `cat /proc/cpuinfo | grep 'model name' | wc -l` =~ /(\d+)/
+        proc_file = '/proc/cpuinfo'
+        if !File.exist?(proc_file)
+          @processors = 1
+        elsif `cat #{proc_file} | grep 'model name' | wc -l` =~ /(\d+)/
           @processors = $1.to_i
         end
         if @processors < 1

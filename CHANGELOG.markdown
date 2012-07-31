@@ -1,3 +1,8 @@
+# 1.0.3
+
+* MetricMeta equality - downcase
+* Suppressing "cat: /proc/cpuinfo: No such file or directory" error on distros that don't support it.
+
 # 1.0.2
 
 * Net::HTTP instrumentation

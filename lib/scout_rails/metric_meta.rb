@@ -22,21 +22,13 @@ class ScoutRails::MetricMeta
   end
   
   def hash
-     h = metric_name.hash
-     h ^= scope.hash unless scope.nil?
-     h ^= desc.hash unless desc.nil?
+     h = metric_name.downcase.hash
+     h ^= scope.downcase.hash unless scope.nil?
+     h ^= desc.downcase.hash unless desc.nil?
      h
-   end
-   
-   def <=>(o)
-     namecmp = self.name <=> o.name
-     return namecmp if namecmp != 0
-     scopecmp = (self.scope || '') <=> (o.scope || '')
-     return scopecmp if scopecmp != 0
-     (self.desc || '') <=> (o.desc || '') 
    end
 
   def eql?(o)
-   self.class == o.class && metric_name.eql?(o.metric_name) && scope == o.scope && client_id == o.client_id && desc == o.desc
+   self.class == o.class && metric_name.downcase.eql?(o.metric_name.downcase) && scope == o.scope && client_id == o.client_id && desc == o.desc
   end
 end # class MetricMeta
