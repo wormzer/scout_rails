@@ -1,3 +1,7 @@
+# 1.0.4
+
+* Added Mongo + Moped instrumentation. Mongo is used for Mongoid < 3.
+
 # 1.0.3
 
 * MetricMeta equality - downcase
