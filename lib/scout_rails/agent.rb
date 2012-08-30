@@ -291,6 +291,8 @@ module ScoutRails
       end
       require File.expand_path(File.join(File.dirname(__FILE__),'instruments/active_record_instruments.rb'))
       require File.expand_path(File.join(File.dirname(__FILE__),'instruments/net_http.rb'))
+      require File.expand_path(File.join(File.dirname(__FILE__),'instruments/moped_instruments.rb'))
+      require File.expand_path(File.join(File.dirname(__FILE__),'instruments/mongoid_instruments.rb'))
     rescue
       logger.warn "Exception loading instruments:"
       logger.warn $!.message
