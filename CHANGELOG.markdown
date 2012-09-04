@@ -1,6 +1,7 @@
-# 1.0.4
+# 1.0.4.pre
 
 * Added Mongo + Moped instrumentation. Mongo is used for Mongoid < 3.
+* Proxy support
 
 # 1.0.3
 

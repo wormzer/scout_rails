@@ -262,8 +262,7 @@ module ScoutRails
     
     def request(url, &connector)
       response           = nil
-      http               = Net::HTTP.new(url.host, url.port)
-      response           = http.start(&connector)
+      response           = http(url).start(&connector)
       logger.debug "got response: #{response.inspect}"
       case response
       when Net::HTTPSuccess, Net::HTTPNotModified
@@ -277,6 +276,14 @@ module ScoutRails
       logger.debug "Exception sending request to server: #{$!.message}"
     ensure
       response
+    end
+    
+    # Take care of the http proxy, if specified in config.
+    # Given a blank string, the proxy_uri URI instance's host/port/user/pass will be nil.
+    # Net::HTTP::Proxy returns a regular Net::HTTP class if the first argument (host) is nil.
+    def http(url)
+      proxy_uri = URI.parse(config.settings['proxy'].to_s)
+      Net::HTTP::Proxy(proxy_uri.host,proxy_uri.port,proxy_uri.user,proxy_uri.password).new(url.host, url.port)
     end
     
     # Loads the instrumention logic.
