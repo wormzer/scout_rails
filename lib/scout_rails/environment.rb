@@ -70,14 +70,6 @@ module ScoutRails
       end
     end
     
-    def unicorn?
-      if defined?(::Unicorn) && defined?(::Unicorn::HttpServer)
-        # Ensure Unicorn is actually initialized. It could just be required and not running.
-        ObjectSpace.each_object(::Unicorn::HttpServer) { |x| return true }
-        false
-      end
-    end
-    
     # Called via +#forking?+ since Passenger forks. Adds an event listener to start the worker thread
     # inside the passenger worker process.
     # Background: http://www.modrails.com/documentation/Users%20guide%20Nginx.html#spawning%5Fmethods%5Fexplained
@@ -91,7 +83,7 @@ module ScoutRails
     
     def unicorn?
       if defined?(::Unicorn) && defined?(::Unicorn::HttpServer)
-        # ensure Unicorn is actually initialized. 
+        # Ensure Unicorn is actually initialized. It could just be required and not running.
         ObjectSpace.each_object(::Unicorn::HttpServer) { |x| return true }
       end
     end

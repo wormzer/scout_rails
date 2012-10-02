@@ -1,3 +1,8 @@
+# Master
+
+* Removing duplicate Enviornment#unicorn? method 
+* Removing logging when not instrumenting unscoped method (confusing - looks like an error)
+
 # 1.0.4
 
 * Added Mongo + Moped instrumentation. Mongo is used for Mongoid < 3.
