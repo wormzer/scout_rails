@@ -21,13 +21,15 @@ module ScoutRails::Instruments
     end
     
     def scout_ar_metric_name(sql,name)
+      # sql: SELECT "places".* FROM "places"  ORDER BY "places"."position" ASC
+      # name: Place Load
       if name && (parts = name.split " ") && parts.size == 2
         model = parts.first
         operation = parts.last.downcase
         metric_name = case operation
                       when 'load' then 'find'
                       when 'indexes', 'columns' then nil # not under developer control
-                      when 'destroy', 'find', 'save', 'create' then operation
+                      when 'destroy', 'find', 'save', 'create', 'exists' then operation
                       when 'update' then 'save'
                       else
                         if model == 'Join'

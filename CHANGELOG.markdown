@@ -1,7 +1,8 @@
-# Master
+# 1.0.5.pre
 
 * Removing duplicate Enviornment#unicorn? method 
 * Removing logging when not instrumenting unscoped method (confusing - looks like an error)
+* Recording ActiveRecord exists queries as MODEL#exists vs. SQL#UNKNOWN
 
 # 1.0.4
 
