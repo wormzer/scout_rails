@@ -7,7 +7,6 @@ module ScoutRails
   class Agent
     # Headers passed up with all API requests.
     HTTP_HEADERS = { "Agent-Hostname" => Socket.gethostname }
-    DEFAULT_HOST = 'scoutapp.com'
     # see self.instance
     @@instance = nil 
     
@@ -93,16 +92,6 @@ module ScoutRails
       File.expand_path(File.join("..","..",".."), __FILE__)
     end
     
-    def init_logger
-      @log_file = "#{log_path}/scout_rails.log"
-      @logger = Logger.new(@log_file)
-      @logger.level = Logger::DEBUG
-      def logger.format_message(severity, timestamp, progname, msg)
-        prefix = "[#{timestamp.strftime("%m/%d/%y %H:%M:%S %z")} #{Socket.gethostname} (#{$$})] #{severity} : #{msg}\n"
-      end
-      @logger
-    end
-    
     # The worker thread will automatically start UNLESS:
     # * A supported application server isn't detected (example: running via Rails console)
     # * A supported application server is detected, but it forks (Passenger). In this case, 
@@ -127,10 +116,6 @@ module ScoutRails
           old.bind(self).call(worker)
         end
       end
-    end
-    
-    def log_path
-      "#{environment.root}/log"
     end
     
     # in seconds, time between when the worker thread wakes up and runs.
@@ -245,7 +230,7 @@ module ScoutRails
     end
     
     def checkin_uri
-      URI.parse("http://#{config.settings['host'] || DEFAULT_HOST}/app/#{config.settings['key']}/checkin.scout?name=#{CGI.escape(config.settings['name'])}")
+      URI.parse("http://#{config.settings['host']}/app/#{config.settings['key']}/checkin.scout?name=#{CGI.escape(config.settings['name'])}")
     end
     
     def post(url, body, headers = Hash.new)

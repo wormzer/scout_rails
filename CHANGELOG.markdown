@@ -3,6 +3,8 @@
 * Removing duplicate Enviornment#unicorn? method 
 * Removing logging when not instrumenting unscoped method (confusing - looks like an error)
 * Recording ActiveRecord exists queries as MODEL#exists vs. SQL#UNKNOWN
+* Handling log_level config option and defaulting to 'info' instead of 'debug'
+* Not crashing the app when log file isn't writeable
 
 # 1.0.4
 

@@ -35,8 +35,10 @@ class ScoutRails::LayawayFile
       end
     end
   rescue Errno::ENOENT, Exception  => e
-    ScoutRails::Agent.instance.logger.error(e.message)
+    ScoutRails::Agent.instance.logger.error("Unable to access the layaway file [#{e.message}]. The user running the app must have read+write access.")
     ScoutRails::Agent.instance.logger.debug(e.backtrace.split("\n"))
+    # ensure the in-memory metric hash is cleared so data doesn't continue to accumulate.
+    ScoutRails::Agent.instance.store.metric_hash = {}
   end
 
   def get_data(f)

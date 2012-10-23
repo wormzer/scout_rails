@@ -1,5 +1,10 @@
 module ScoutRails
-  class Config
+  class Config   
+    DEFAULTS =  {
+        'host' => 'scoutapp.com',
+        'log_level' => 'info'
+    }
+
     def initialize(config_path = nil)
       @config_path = config_path
     end
@@ -18,17 +23,20 @@ module ScoutRails
     end
     
     def load_file
-      if !File.exist?(config_file)
-        ScoutRails::Agent.instance.logger.warn "No config file found at [#{config_file}]."
+      begin
+        if !File.exist?(config_file)
+          ScoutRails::Agent.instance.logger.warn "No config file found at [#{config_file}]."
+          @settings = {}
+        else
+          @settings = YAML.load(ERB.new(File.read(config_file)).result(binding))[ScoutRails::Agent.instance.environment.env] || {} 
+        end  
+      rescue Exception => e
+        ScoutRails::Agent.instance.logger.warn "Unable to load the config file."
+        ScoutRails::Agent.instance.logger.warn e.message
+        ScoutRails::Agent.instance.logger.warn e.backtrace
         @settings = {}
-      else
-        @settings = YAML.load(ERB.new(File.read(config_file)).result(binding))[ScoutRails::Agent.instance.environment.env] || {} 
-      end  
-    rescue Exception => e
-      ScoutRails::Agent.instance.logger.warn "Unable to load the config file."
-      ScoutRails::Agent.instance.logger.warn e.message
-      ScoutRails::Agent.instance.logger.warn e.backtrace
-      @settings = {}
+      end
+      @settings = DEFAULTS.merge(@settings)
     end
-  end
-end
+  end # Config
+end # ScoutRails

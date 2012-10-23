@@ -12,19 +12,13 @@ class ScoutRails::Layaway
   
   def deposit_and_deliver
     new_data = ScoutRails::Agent.instance.store.metric_hash
-    controller_count = 0
-    new_data.each do |meta,stats|
-      if meta.metric_name =~ /\AController/
-        controller_count += stats.call_count
-      end
-    end
-    ScoutRails::Agent.instance.logger.debug "Depositing #{controller_count} requests into #{Time.at(slot).strftime("%m/%d/%y %H:%M:%S %z")} slot."
-    
+    log_deposited_requests(new_data)
     to_deliver = {}
     file.read_and_write do |old_data|
       old_data ||= Hash.new
       # merge data
-      # if the previous minute has ended, its time to send those metrics
+      # if (1) there's data in the file and (2) there isn't any data yet for the current minute, this means we've 
+      # collected all metrics for the previous slots and we're ready to deliver.
       if old_data.any? and old_data[slot].nil?
         to_deliver = old_data
         old_data = Hash.new
@@ -34,16 +28,7 @@ class ScoutRails::Layaway
         ScoutRails::Agent.instance.logger.debug "There is no data in the layaway file to deliver."
       end
       old_data[slot]=ScoutRails::Agent.instance.store.merge_data_and_clear(old_data[slot] || Hash.new)
-      ScoutRails::Agent.instance.logger.debug "Saving the following #{old_data.size} time slots locally:"
-      old_data.each do |k,v|
-        controller_count = 0
-        new_data.each do |meta,stats|
-          if meta.metric_name =~ /\AController/
-            controller_count += stats.call_count
-          end
-        end
-        ScoutRails::Agent.instance.logger.debug "#{Time.at(k).strftime("%m/%d/%y %H:%M:%S %z")} => #{controller_count} requests"
-      end
+      log_saved_requests(old_data,new_data)
       old_data
     end
     to_deliver.any? ? validate_data(to_deliver) : {}
@@ -72,5 +57,28 @@ class ScoutRails::Layaway
     t = Time.now
     t -= t.sec
     t.to_i
+  end
+  
+  def log_deposited_requests(new_data)
+    controller_count = 0
+    new_data.each do |meta,stats|
+      if meta.metric_name =~ /\AController/
+        controller_count += stats.call_count
+      end
+    end
+    ScoutRails::Agent.instance.logger.debug "Depositing #{controller_count} requests into #{Time.at(slot).strftime("%m/%d/%y %H:%M:%S %z")} slot."
+  end
+  
+  def log_saved_requests(old_data,new_data)
+    ScoutRails::Agent.instance.logger.debug "Saving the following #{old_data.size} time slots locally:"
+    old_data.each do |k,v|
+      controller_count = 0
+      new_data.each do |meta,stats|
+        if meta.metric_name =~ /\AController/
+          controller_count += stats.call_count
+        end
+      end
+      ScoutRails::Agent.instance.logger.debug "#{Time.at(k).strftime("%m/%d/%y %H:%M:%S %z")} => #{controller_count} requests"
+    end
   end
 end
