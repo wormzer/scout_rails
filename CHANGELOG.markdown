@@ -1,4 +1,4 @@
-# 1.0.5.pre
+# 1.0.5
 
 * Removing duplicate Enviornment#unicorn? method 
 * Removing logging when not instrumenting unscoped method (confusing - looks like an error)
