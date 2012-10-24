@@ -6,6 +6,7 @@ require 'net/http'
 require File.expand_path('../scout_rails/version.rb', __FILE__)
 require File.expand_path('../scout_rails/agent.rb', __FILE__)
 require File.expand_path('../scout_rails/agent/logging.rb', __FILE__)
+require File.expand_path('../scout_rails/agent/reporting.rb', __FILE__)
 require File.expand_path('../scout_rails/layaway.rb', __FILE__)
 require File.expand_path('../scout_rails/layaway_file.rb', __FILE__)
 require File.expand_path('../scout_rails/config.rb', __FILE__)
