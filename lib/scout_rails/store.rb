@@ -63,8 +63,8 @@ class ScoutRails::Store
     meta.scope = nil if stack_empty
     
     # add backtrace for slow calls ... how is exclusive time handled?
-    if duration > 0.5 and !stack_empty
-      meta.extra = {:backtrace => caller.find_all { |c| c =~ /\/app\//}}
+    if duration > ScoutRails::TransactionSample::BACKTRACE_THRESHOLD and !stack_empty
+      meta.extra = {:backtrace => ScoutRails::TransactionSample.backtrace_parser(caller)}
     end
     stat = transaction_hash[meta] || ScoutRails::MetricStats.new(!stack_empty)
     

@@ -1,3 +1,7 @@
+# 1.0.6.pre
+
+* More filtering on transaction sample backtraces
+
 # 1.0.5
 
 * Removing duplicate Enviornment#unicorn? method 
