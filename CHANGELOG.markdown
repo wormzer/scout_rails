@@ -1,4 +1,4 @@
-# 1.0.6.pre
+# 1.0.6
 
 * More filtering on transaction sample backtraces
 
