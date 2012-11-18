@@ -1,3 +1,8 @@
+# 1.0.7.pre
+
+* Sinatra 1.3+ compatibility (alias dispatch! instead of route_eval)
+* Requiring libraries that may not be present in bare-bones Sinatra apps
+
 # 1.0.6
 
 * More filtering on transaction sample backtraces

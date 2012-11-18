@@ -1,33 +1,41 @@
 module ScoutRails::Instruments
   module SinatraInstruments
-    def route_eval_with_scout_instruments(&blockarg)
-      path = unescape(@request.path_info)
-      name = path
-      # Go through each route and look for a match
-      if routes = self.class.routes[@request.request_method]
-        routes.detect do |pattern, keys, conditions, block|
-          if blockarg.equal? block
-            name = pattern.source
-          end
+    def dispatch_with_scout_instruments!
+      scout_controller_action = "Controller/Sinatra/#{scout_sinatra_controller_name(@request)}"
+      self.class.trace(scout_controller_action, :uri => @request.path_info) do
+        dispatch_without_scout_instruments!
+      end
+    end
+    
+    # Iterates through the app's routes, returning the matched route that the request should be 
+    # grouped under for the metric name. 
+    #
+    # If not found, "unknown" is returned. This prevents a metric explosion.
+    #
+    # Nice to have: substitute the param pattern (([^/?#]+)) w/the named key (the +key+ param of the block).
+    def scout_sinatra_controller_name(request)
+      name = 'unknown'
+      verb = request.request_method if request && request.respond_to?(:request_method) 
+      Array(self.class.routes[verb]).each do |pattern, keys, conditions, block|
+        if pattern = process_route(pattern, keys, conditions) { pattern.source }
+          name = pattern
         end
       end
       name.gsub!(%r{^[/^]*(.*?)[/\$\?]*$}, '\1')
-      name = 'root' if name.empty?
-      name = @request.request_method + ' ' + name if @request && @request.respond_to?(:request_method)      
-      scout_controller_action = "Controller/Sinatra/#{name}"
-      self.class.trace(scout_controller_action, :uri => @request.path_info) do
-        route_eval_without_scout_instruments(&blockarg)    
+      if verb
+        name = [verb,name].join(' ')
       end
-    end # route_eval_with_scout_instrumentss
+      name
+    end
   end # SinatraInstruments
 end # ScoutRails::Instruments
 
-if defined?(::Sinatra) && defined?(::Sinatra::Base)
+if defined?(::Sinatra) && defined?(::Sinatra::Base) && Sinatra::Base.private_method_defined?(:dispatch!)
   ScoutRails::Agent.instance.logger.debug "Instrumenting Sinatra"
   ::Sinatra::Base.class_eval do
     include ScoutRails::Tracer
     include ::ScoutRails::Instruments::SinatraInstruments
-    alias route_eval_without_scout_instruments route_eval
-    alias route_eval route_eval_with_scout_instruments
+    alias dispatch_without_scout_instruments! dispatch!
+    alias dispatch! dispatch_with_scout_instruments!
   end
 end

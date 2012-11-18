@@ -3,6 +3,9 @@ end
 require 'socket'
 require 'set'
 require 'net/http'
+require 'logger'
+require 'yaml'
+require 'cgi'
 require File.expand_path('../scout_rails/version.rb', __FILE__)
 require File.expand_path('../scout_rails/agent.rb', __FILE__)
 require File.expand_path('../scout_rails/agent/logging.rb', __FILE__)
