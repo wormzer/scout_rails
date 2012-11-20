@@ -1,4 +1,4 @@
-# 1.0.7.pre
+# 1.0.7
 
 * Sinatra 1.3+ compatibility (alias dispatch! instead of route_eval)
 * Requiring libraries that may not be present in bare-bones Sinatra apps
