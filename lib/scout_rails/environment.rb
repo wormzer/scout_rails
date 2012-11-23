@@ -104,6 +104,10 @@ module ScoutRails
       defined?(JRuby)
     end
     
+    def ruby_19?
+      defined?(RUBY_ENGINE) && RUBY_ENGINE == "ruby" && RUBY_VERSION.match(/^1\.9/)
+    end
+    
     ### framework checks
 
     def sinatra?

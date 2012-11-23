@@ -1,3 +1,7 @@
+# 1.0.8
+
+* Processing metrics when a process starts + exits.
+
 # 1.0.7
 
 * Sinatra 1.3+ compatibility (alias dispatch! instead of route_eval)

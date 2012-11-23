@@ -63,25 +63,44 @@ module ScoutRails
       @started = true
       logger.info "Starting monitoring. Framework [#{environment.framework}] App Server [#{environment.app_server}]."
       start_instruments
-      if !start_worker_thread?
+      if !start_background_worker?
         logger.debug "Not starting worker thread"
         install_passenger_worker_process_event if environment.app_server == :passenger
         install_unicorn_worker_loop if environment.app_server == :unicorn
         return
       end
-      start_worker_thread
+      start_background_worker
       handle_exit
       logger.info "Scout Agent [#{ScoutRails::VERSION}] Initialized"
     end
     
-    # Placeholder: store metrics locally on exit so those in memory aren't lost. Need to decide
-    # whether we'll report these immediately or just store locally and risk having stale data.
+    # at_exit, calls Agent#shutdown to wrapup metric reporting.
     def handle_exit
       if environment.sinatra? || environment.jruby? || environment.rubinius?
         logger.debug "Exit handler not supported"
       else
-        at_exit { at_exit { logger.debug "Shutdown!" } }
+        at_exit do 
+          logger.debug "Shutdown!"
+          # MRI 1.9 bug drops exit codes.
+          # http://bugs.ruby-lang.org/issues/5218
+          if environment.ruby_19?
+            status = $!.status if $!.is_a?(SystemExit)
+            shutdown
+            exit status if status
+          else
+            shutdown
+          end
+        end # at_exit
       end
+    end
+    
+    # Called via an at_exit handler, it (1) stops the background worker and (2) runs it a final time. 
+    # The final run ensures metrics are stored locally to the layaway / reported to scoutapp.com. Otherwise,
+    # in-memory metrics would be lost and a gap would appear on restarts.
+    def shutdown
+      return if !started?
+      @background_worker.stop
+      @background_worker.run_once
     end
     
     def started?
@@ -96,14 +115,14 @@ module ScoutRails
     # * A supported application server isn't detected (example: running via Rails console)
     # * A supported application server is detected, but it forks (Passenger). In this case, 
     #   the agent is started in the forked process.
-    def start_worker_thread?
+    def start_background_worker?
       !environment.forking? or environment.app_server == :thin
     end
     
     def install_passenger_worker_process_event
       PhusionPassenger.on_event(:starting_worker_process) do |forked|
         logger.debug "Passenger is starting a worker process. Starting worker thread."
-        self.class.instance.start_worker_thread
+        self.class.instance.start_background_worker
       end
     end
     
@@ -112,47 +131,24 @@ module ScoutRails
       Unicorn::HttpServer.class_eval do
         old = instance_method(:worker_loop)
         define_method(:worker_loop) do |worker|
-          ScoutRails::Agent.instance.start_worker_thread
+          ScoutRails::Agent.instance.start_background_worker
           old.bind(self).call(worker)
         end
       end
     end
     
-    # in seconds, time between when the worker thread wakes up and runs.
-    def period
-      60
-    end
-    
     # Creates the worker thread. The worker thread is a loop that runs continuously. It sleeps for +Agent#period+ and when it wakes,
     # processes data, either saving it to disk or reporting to Scout.
-    def start_worker_thread
+    def start_background_worker
       logger.debug "Creating worker thread."
-      @worker_thread = Thread.new do
-        begin
-          logger.debug "Starting worker thread, running every #{period} seconds"
-          next_time = Time.now + period
-          while true do
-            now = Time.now
-            while now < next_time
-              sleep_time = next_time - now
-              sleep(sleep_time) if sleep_time > 0
-              now = Time.now
-            end
-            process_metrics
-            while next_time <= now
-              next_time += period
-            end
-          end
-        rescue
-          logger.debug "Worker Thread Exception!!!!!!!"
-          logger.debug $!.message
-          logger.debug $!.backtrace
-        end
+      @background_worker = ScoutRails::BackgroundWorker.new
+      @background_worker_thread = Thread.new do
+        @background_worker.start { process_metrics }
       end # thread new
       logger.debug "Done creating worker thread."
     end
     
-    # Called from #process_metrics, which is run via the worker thread. 
+    # Called from #process_metrics, which is run via the background worker. 
     def run_samplers
       begin
         cpu_util=@process_cpu.run # returns a hash
