@@ -65,7 +65,7 @@ module ScoutRails
       start_instruments
       if !start_background_worker?
         logger.debug "Not starting worker thread"
-        install_passenger_worker_process_event if environment.app_server == :passenger
+        install_passenger_events if environment.app_server == :passenger
         install_unicorn_worker_loop if environment.app_server == :unicorn
         return
       end
@@ -119,10 +119,16 @@ module ScoutRails
       !environment.forking? or environment.app_server == :thin
     end
     
-    def install_passenger_worker_process_event
+    def install_passenger_events
       PhusionPassenger.on_event(:starting_worker_process) do |forked|
         logger.debug "Passenger is starting a worker process. Starting worker thread."
         self.class.instance.start_background_worker
+      end
+      # The agent's at_exit hook doesn't run when a Passenger process stops. 
+      # This does run when a process stops.
+      PhusionPassenger.on_event(:stopping_worker_process) do
+        logger.debug "Passenger is stopping a worker process, shutting down the agent."
+        ScoutRails::Agent.instance.shutdown
       end
     end
     
