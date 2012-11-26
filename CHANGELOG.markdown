@@ -1,6 +1,6 @@
 # 1.0.8
 
-* Processing metrics when a process starts + exits.
+* Processing metrics when a process starts + exits to prevent losing in-memory metrics on process exit.
 
 # 1.0.7
 
