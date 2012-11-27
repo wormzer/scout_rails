@@ -159,7 +159,7 @@ module ScoutRails
       begin
         cpu_util=@process_cpu.run # returns a hash
         logger.debug "Process CPU: #{cpu_util.inspect} [#{environment.processors} CPU(s)]"
-        store.track!("CPU/Utilization",cpu_util) if cpu_util
+        store.track!("CPU/Utilization",cpu_util,:scope => nil) if cpu_util
       rescue => e
         logger.info "Error reading ProcessCpu"
         logger.debug e.message
@@ -169,7 +169,7 @@ module ScoutRails
       begin
         mem_usage=@process_memory.run # returns a single number, in MB
         logger.debug "Process Memory: #{mem_usage}MB"
-        store.track!("Memory/Physical",mem_usage) if mem_usage
+        store.track!("Memory/Physical",mem_usage,:scope => nil) if mem_usage
       rescue => e
         logger.info "Error reading ProcessMemory"
         logger.debug e.message

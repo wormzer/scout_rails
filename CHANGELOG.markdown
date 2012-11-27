@@ -1,6 +1,7 @@
 # 1.0.8
 
 * Processing metrics when a process starts + exits to prevent losing in-memory metrics on process exit.
+* Ensuring scope is nil for samplers (could be run when a process is killed before scope is reset)
 
 # 1.0.7
 
