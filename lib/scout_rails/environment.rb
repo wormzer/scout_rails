@@ -98,7 +98,7 @@ module ScoutRails
     # If forking, don't start worker thread in the master process. Since it's started as a Thread, it won't survive
     # the fork. 
     def forking?
-      passenger? or unicorn?
+      passenger? or unicorn? or rainbows?
     end
     
     ### ruby checks
