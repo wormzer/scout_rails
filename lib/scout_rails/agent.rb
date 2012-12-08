@@ -67,6 +67,7 @@ module ScoutRails
         logger.debug "Not starting worker thread"
         install_passenger_events if environment.app_server == :passenger
         install_unicorn_worker_loop if environment.app_server == :unicorn
+        install_rainbows_worker_loop if environment.app_server == :rainbows
         return
       end
       start_background_worker
@@ -142,6 +143,17 @@ module ScoutRails
         end
       end
     end
+    
+    def install_rainbows_worker_loop
+      logger.debug "Installing Rainbows worker loop."
+      Rainbows::HttpServer.class_eval do
+        old = instance_method(:worker_loop)
+        define_method(:worker_loop) do |worker|
+          ScoutRails::Agent.instance.start_background_worker
+          old.bind(self).call(worker)
+        end
+      end
+    end    
     
     # Creates the worker thread. The worker thread is a loop that runs continuously. It sleeps for +Agent#period+ and when it wakes,
     # processes data, either saving it to disk or reporting to Scout.

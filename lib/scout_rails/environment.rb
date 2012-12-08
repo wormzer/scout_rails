@@ -55,6 +55,7 @@ module ScoutRails
       @app_server ||= if thin? then :thin
                     elsif passenger? then :passenger
                     elsif webrick? then :webrick
+                    elsif rainbows? then :rainbows
                     elsif unicorn? then :unicorn
                     else nil
                     end
@@ -79,6 +80,12 @@ module ScoutRails
     
     def webrick?
       defined?(::WEBrick) && defined?(::WEBrick::VERSION)
+    end
+
+    def rainbows?
+      if defined?(::Rainbows) && defined?(::Rainbows::HttpServer)
+        ObjectSpace.each_object(::Rainbows::HttpServer) { |x| return true }
+      end
     end
     
     def unicorn?
