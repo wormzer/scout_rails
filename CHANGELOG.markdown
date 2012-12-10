@@ -1,3 +1,7 @@
+# 1.0.9
+
+* Rainbows! app server support.
+
 # 1.0.8
 
 * Processing metrics when a process starts + exits to prevent losing in-memory metrics on process exit.
