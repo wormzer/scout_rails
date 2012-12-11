@@ -1,6 +1,7 @@
 # 1.0.9
 
 * Rainbows! app server support.
+* Removed undocumented Sinatra support.
 
 # 1.0.8
 

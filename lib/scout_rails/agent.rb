@@ -196,8 +196,6 @@ module ScoutRails
         require File.expand_path(File.join(File.dirname(__FILE__),'instruments/rails/action_controller_instruments.rb'))
       when :rails3
         require File.expand_path(File.join(File.dirname(__FILE__),'instruments/rails3/action_controller_instruments.rb'))
-      when :sinatra
-        require File.expand_path(File.join(File.dirname(__FILE__),'instruments/sinatra_instruments.rb'))
       end
       require File.expand_path(File.join(File.dirname(__FILE__),'instruments/active_record_instruments.rb'))
       require File.expand_path(File.join(File.dirname(__FILE__),'instruments/net_http.rb'))
