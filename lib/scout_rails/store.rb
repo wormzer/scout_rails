@@ -1,6 +1,10 @@
 # The store encapsolutes the logic that (1) saves instrumented data by Metric name to memory and (2) maintains a stack (just an Array)
 # of instrumented methods that are being called. It's accessed via +ScoutRails::Agent.instance.store+. 
 class ScoutRails::Store
+  
+  # Limits the size of the metric hash to prevent a metric explosion. 
+  MAX_SIZE = 1000
+  
   attr_accessor :metric_hash
   attr_accessor :transaction_hash
   attr_accessor :stack
@@ -142,7 +146,7 @@ class ScoutRails::Store
     old_data.each do |old_meta,old_stats|
       if stats = metric_hash[old_meta]
         metric_hash[old_meta] = stats.combine!(old_stats)
-      else
+      elsif metric_hash.size < MAX_SIZE
         metric_hash[old_meta] = old_stats
       end
     end

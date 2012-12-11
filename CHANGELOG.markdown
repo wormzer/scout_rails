@@ -2,6 +2,7 @@
 
 * Rainbows! app server support.
 * Removed undocumented Sinatra support.
+* Limiting metric hash size to 1000 to prevent a metric explosion.
 
 # 1.0.8
 

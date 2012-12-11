@@ -10,6 +10,7 @@ module ScoutRails
         metrics = layaway.deposit_and_deliver
         if metrics.any?
           add_metric_ids(metrics)  
+          logger.warn "Some data may be lost - metric size is at limit" if metrics.size == ScoutRails::Store::MAX_SIZE
           # for debugging, count the total number of requests    
           controller_count = 0
           metrics.each do |meta,stats|
