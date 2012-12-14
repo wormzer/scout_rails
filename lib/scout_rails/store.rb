@@ -71,9 +71,8 @@ class ScoutRails::Store
       meta.extra = {:backtrace => ScoutRails::TransactionSample.backtrace_parser(caller)}
     end
     stat = transaction_hash[meta] || ScoutRails::MetricStats.new(!stack_empty)
-    
     stat.update!(duration,duration-item.children_time)
-    transaction_hash[meta] = stat   
+    transaction_hash[meta] = stat if store_metric?(stack_empty)
     
     # Uses controllers as the entry point for a transaction. Otherwise, stats are ignored.
     if stack_empty and meta.metric_name.match(/\AController\//)
@@ -86,6 +85,14 @@ class ScoutRails::Store
       end  
       merge_data(duplicate.merge({meta.dup => stat.dup})) # aggregrates + controller 
     end
+  end
+  
+  # TODO - Move more logic to TransactionSample
+  #
+  # Limits the size of the transaction hash to prevent a large transactions. The final item on the stack
+  # is allowed to be stored regardless of hash size to wrapup the transaction sample w/the parent metric.
+  def store_metric?(stack_empty)
+    transaction_hash.size < ScoutRails::TransactionSample::MAX_SIZE or stack_empty
   end
   
   # Returns the top-level category names used in the +metrics+ hash.

@@ -1,3 +1,7 @@
+# 1.1.0
+
+* Limiting the size of the transaction hash to 100 metrics to prevent large transaction samples.
+
 # 1.0.9
 
 * Rainbows! app server support.
