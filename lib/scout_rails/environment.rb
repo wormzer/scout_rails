@@ -85,7 +85,7 @@ module ScoutRails
     # inside the passenger worker process.
     # Background: http://www.modrails.com/documentation/Users%20guide%20Nginx.html#spawning%5Fmethods%5Fexplained
     def passenger?
-      (defined?(::Passenger) && defined?(::Passenger::AbstractServer)) || defined?(::IN_PHUSION_PASSENGER)
+      (defined?(::Passenger) && defined?(::Passenger::AbstractServer)) || defined?(::PhusionPassenger)
     end
     
     def webrick?

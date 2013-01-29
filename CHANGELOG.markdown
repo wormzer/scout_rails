@@ -1,3 +1,8 @@
+# 1.1.1
+
+* Adjusting ordering of app server detection.
+* Changing Passenger detection to look for ::PhusionPassenger vs. ::IN_PHUSION_PASSENGER.
+
 # 1.1.0
 
 * Limiting the size of the transaction hash to 100 metrics to prevent large transaction samples.
