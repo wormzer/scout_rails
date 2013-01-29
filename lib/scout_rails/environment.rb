@@ -51,12 +51,22 @@ module ScoutRails
       end
     end
     
+    # This needs to be improved. Frequently, multiple app servers gem are present and which
+    # ever is checked first becomes the designated app server. 
+    # 
+    # I've put Thin and Webrick last as they are often used in development and included in Gemfiles 
+    # but less likely used in production. 
+    #
+    # Next step: (1) list out all detected app servers (2) install hooks for those that need it (passenger, rainbows, unicorn). 
+    #
+    # Believe the biggest downside is the master process for forking app servers will get a background worker. Not sure how this will
+    # impact metrics (it shouldn't process requests). 
     def app_server
-      @app_server ||= if thin? then :thin
-                    elsif passenger? then :passenger
-                    elsif webrick? then :webrick
+      @app_server ||= if passenger? then :passenger
                     elsif rainbows? then :rainbows
                     elsif unicorn? then :unicorn
+                    elsif thin? then :thin
+                    elsif webrick then :webrick
                     else nil
                     end
     end
