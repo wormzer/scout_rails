@@ -1,3 +1,7 @@
+# 1.1.2
+
+* Fix for webrick detection
+
 # 1.1.1
 
 * Adjusting ordering of app server detection.

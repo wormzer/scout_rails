@@ -66,7 +66,7 @@ module ScoutRails
                     elsif rainbows? then :rainbows
                     elsif unicorn? then :unicorn
                     elsif thin? then :thin
-                    elsif webrick then :webrick
+                    elsif webrick? then :webrick
                     else nil
                     end
     end
