@@ -2,6 +2,7 @@
 
 * Adjusting ordering of app server detection.
 * Changing Passenger detection to look for ::PhusionPassenger vs. ::IN_PHUSION_PASSENGER.
+* Added license
 
 # 1.1.0
 
