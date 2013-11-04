@@ -1,3 +1,5 @@
+__Rails application monitoring is avaiable by invite-only @ Scout.__
+
 # ScoutRails
 
 A Ruby gem for detailed Rails application performance analysis. Metrics are reported to [Scout](https://scoutapp.com), a hosted server and application monitoring service. For general server monitoring, see our [server monitoring agent](https://github.com/scoutapp/scout-client).
