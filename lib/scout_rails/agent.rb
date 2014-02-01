@@ -77,7 +77,7 @@ module ScoutRails
     
     # at_exit, calls Agent#shutdown to wrapup metric reporting.
     def handle_exit
-      if environment.sinatra? || environment.jruby? || environment.rubinius?
+      if environment.padrino? || environment.sinatra? || environment.jruby? || environment.rubinius?
         logger.debug "Exit handler not supported"
       else
         at_exit do 

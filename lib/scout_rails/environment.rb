@@ -7,6 +7,7 @@ module ScoutRails
                when :rails3 then Rails.env
                when :sinatra
                  ENV['RACK_ENV'] || ENV['RAILS_ENV'] || 'development'
+               when :padrino Padrino.env
                end
     end
     
@@ -18,6 +19,7 @@ module ScoutRails
                         else
                           :rails3
                         end
+                      when defined?(::Padrino) && defined?(::Padrino::Base) then :padrino
                       when defined?(::Sinatra) && defined?(::Sinatra::Base) then :sinatra
                       else :ruby
                       end
@@ -46,6 +48,8 @@ module ScoutRails
         Rails.root
       elsif framework == :sinatra
         Sinatra::Application.root
+      elsif framework == :padrino
+        Padrino::Application.root
       else
         '.'
       end
@@ -129,6 +133,10 @@ module ScoutRails
 
     def sinatra?
       defined?(Sinatra::Application)
+    end
+
+    def padrino?
+      defined?(Padrino::Application)
     end
 
   end # class Environemnt
